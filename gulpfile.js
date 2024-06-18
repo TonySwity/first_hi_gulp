@@ -6,6 +6,7 @@ const gRename = require('gulp-rename');
 const gCleanCSS = require('gulp-clean-css');
 const babel = require('gulp-babel');
 const concat = require('gulp-concat');
+const sourcemaps = require('gulp-sourcemaps');
 
 const paths = {
 	styles: {
@@ -24,6 +25,7 @@ function clean() {
 function styles() {
 	return gulp
 		.src(paths.styles.src)
+		.pipe(sourcemaps.init())
 		.pipe(gLess())
 		.pipe(gCleanCSS())
 		.pipe(
@@ -32,17 +34,18 @@ function styles() {
 				suffix: '.min',
 			})
 		)
+		.pipe(sourcemaps.write())
 		.pipe(gulp.dest(paths.styles.dest));
 }
 
 function scripts() {
 	return gulp
-		.src(paths.scripts.src, {
-			sourcemaps: true,
-		})
+		.src(paths.scripts.src)
+		.pipe(sourcemaps.init())
 		.pipe(babel())
 		.pipe(uglify())
 		.pipe(concat('main.min.js'))
+		.pipe(sourcemaps.write())
 		.pipe(gulp.dest(paths.scripts.dest));
 }
 
