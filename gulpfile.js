@@ -10,6 +10,9 @@ const sourcemaps = require('gulp-sourcemaps');
 const autoprefixer = require('gulp-autoprefixer');
 const imagemin = require('gulp-imagemin');
 const htmlmin = require('gulp-htmlmin');
+const size = require('gulp-size');
+const newer = require('gulp-newer');
+const browsersync = require('browser-sync').create();
 
 const paths = {
 	html: {
@@ -30,14 +33,16 @@ const paths = {
 	},
 };
 function clean() {
-	return del(['dist']);
+	return del(['dist/*', '!dist/img']);
 }
 
 function html() {
 	return gulp
 		.src(paths.html.src)
 		.pipe(htmlmin({ collapseWhitespace: true }))
-		.pipe(gulp.dest(paths.html.dest));
+		.pipe(size({ showFiles: true }))
+		.pipe(gulp.dest(paths.html.dest))
+		.pipe(browsersync.stream());
 }
 
 function styles() {
@@ -62,7 +67,9 @@ function styles() {
 			})
 		)
 		.pipe(sourcemaps.write('.'))
-		.pipe(gulp.dest(paths.styles.dest));
+		.pipe(size({ showFiles: true }))
+		.pipe(gulp.dest(paths.styles.dest))
+		.pipe(browsersync.stream());
 }
 
 function scripts() {
@@ -77,10 +84,15 @@ function scripts() {
 		.pipe(uglify())
 		.pipe(concat('main.min.js'))
 		.pipe(sourcemaps.write('.'))
-		.pipe(gulp.dest(paths.scripts.dest));
+		.pipe(size({ showFiles: true }))
+		.pipe(gulp.dest(paths.scripts.dest))
+		.pipe(browsersync.stream());
 }
 
 function watch() {
+	browserSync.init({
+		server: './src/',
+	});
 	gulp.watch(paths.styles.src, styles);
 	gulp.watch(paths.scripts.src, scripts);
 }
@@ -88,7 +100,9 @@ function watch() {
 function img() {
 	return gulp
 		.src(paths.images.src)
-		.pipe(imagemin())
+		.pipe(newer(paths.images.dest))
+		.pipe(imagemin({ progressive: true }))
+		.pipe(size({ showFiles: true }))
 		.pipe(gulp.dest(paths.images.dest));
 }
 
