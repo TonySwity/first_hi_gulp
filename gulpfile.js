@@ -1,4 +1,5 @@
 const gulp = require('gulp');
+const stylus = require('gulp-stylus');
 const uglify = require('gulp-uglify');
 const gLess = require('gulp-less');
 const del = require('del');
@@ -13,14 +14,19 @@ const htmlmin = require('gulp-htmlmin');
 const size = require('gulp-size');
 const newer = require('gulp-newer');
 const browsersync = require('browser-sync').create();
+const gulpPug = require('gulp-pug');
 
 const paths = {
 	html: {
 		src: 'src/*.html',
-		dest: 'dist',
+		dest: 'dist/',
+	},
+	pug: {
+		src: 'src/*.pug',
+		dest: 'dist/',
 	},
 	styles: {
-		src: 'src/styles/**/*.less',
+		src: ['src/styles/**/*.styl', 'src/styles/**/*.less'],
 		dest: 'dist/css/',
 	},
 	scripts: {
@@ -28,12 +34,21 @@ const paths = {
 		dest: 'dist/js/',
 	},
 	images: {
-		src: 'src/img/*',
+		src: 'src/img/**',
 		dest: 'dist/img',
 	},
 };
 function clean() {
 	return del(['dist/*', '!dist/img']);
+}
+
+function pug() {
+	return gulp
+		.src(paths.pug.src)
+		.pipe(gulpPug())
+		.pipe(size({ showFiles: true }))
+		.pipe(gulp.dest(paths.pug.dest))
+		.pipe(browsersync.stream());
 }
 
 function html() {
@@ -46,30 +61,33 @@ function html() {
 }
 
 function styles() {
-	return gulp
-		.src(paths.styles.src)
-		.pipe(sourcemaps.init())
-		.pipe(gLess())
-		.pipe(
-			autoprefixer({
-				cascade: false,
-			})
-		)
-		.pipe(
-			gCleanCSS({
-				level: 2,
-			})
-		)
-		.pipe(
-			gRename({
-				basename: 'main',
-				suffix: '.min',
-			})
-		)
-		.pipe(sourcemaps.write('.'))
-		.pipe(size({ showFiles: true }))
-		.pipe(gulp.dest(paths.styles.dest))
-		.pipe(browsersync.stream());
+	return (
+		gulp
+			.src(paths.styles.src)
+			.pipe(sourcemaps.init())
+			.pipe(gLess())
+			//.pipe(stylus())
+			.pipe(
+				autoprefixer({
+					cascade: false,
+				})
+			)
+			.pipe(
+				gCleanCSS({
+					level: 2,
+				})
+			)
+			.pipe(
+				gRename({
+					basename: 'main',
+					suffix: '.min',
+				})
+			)
+			.pipe(sourcemaps.write('.'))
+			.pipe(size({ showFiles: true }))
+			.pipe(gulp.dest(paths.styles.dest))
+			.pipe(browsersync.stream())
+	);
 }
 
 function scripts() {
@@ -90,11 +108,14 @@ function scripts() {
 }
 
 function watch() {
-	browserSync.init({
-		server: './src/',
+	browsersync.init({
+		server: './dist/',
 	});
+	gulp.watch(paths.html.dest).on('change', browsersync.reload);
+	gulp.watch(paths.html.src, html);
 	gulp.watch(paths.styles.src, styles);
 	gulp.watch(paths.scripts.src, scripts);
+	gulp.watch(paths.images.src, img);
 }
 
 function img() {
@@ -121,3 +142,4 @@ exports.scripts = scripts;
 exports.watch = watch;
 exports.build = build;
 exports.default = build;
+exports.pug = pug;
