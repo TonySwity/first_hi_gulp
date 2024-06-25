@@ -1,5 +1,7 @@
 const gulp = require('gulp');
+const ts = require('gulp-typescript');
 const stylus = require('gulp-stylus');
+const sass = require('gulp-sass')(require('sass'));
 const uglify = require('gulp-uglify');
 const gLess = require('gulp-less');
 const del = require('del');
@@ -26,11 +28,16 @@ const paths = {
 		dest: 'dist/',
 	},
 	styles: {
-		src: ['src/styles/**/*.styl', 'src/styles/**/*.less'],
+		src: [
+			'src/styles/**/*.sass',
+			'src/styles/**/*.scss',
+			'src/styles/**/*.styl',
+			'src/styles/**/*.less',
+		],
 		dest: 'dist/css/',
 	},
 	scripts: {
-		src: 'src/scripts/**/*.js',
+		src: ['src/scripts/**/*.ts', 'src/scripts/**/*.js'],
 		dest: 'dist/js/',
 	},
 	images: {
@@ -65,8 +72,9 @@ function styles() {
 		gulp
 			.src(paths.styles.src)
 			.pipe(sourcemaps.init())
-			.pipe(gLess())
+			//.pipe(gLess())
 			//.pipe(stylus())
+			.pipe(sass().on('error', sass.logError))
 			.pipe(
 				autoprefixer({
 					cascade: false,
@@ -94,6 +102,12 @@ function scripts() {
 	return gulp
 		.src(paths.scripts.src)
 		.pipe(sourcemaps.init())
+		.pipe(
+			ts({
+				noImplicitAny: true,
+				outFile: 'main.min.js',
+			})
+		)
 		.pipe(
 			babel({
 				presets: ['@babel/env'],
