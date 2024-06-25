@@ -1,5 +1,6 @@
 const gulp = require('gulp');
 const ts = require('gulp-typescript');
+const coffee = require('gulp-coffee');
 const stylus = require('gulp-stylus');
 const sass = require('gulp-sass')(require('sass'));
 const uglify = require('gulp-uglify');
@@ -37,7 +38,11 @@ const paths = {
 		dest: 'dist/css/',
 	},
 	scripts: {
-		src: ['src/scripts/**/*.ts', 'src/scripts/**/*.js'],
+		src: [
+			'src/scripts/**/*.coffee',
+			'src/scripts/**/*.ts',
+			'src/scripts/**/*.js',
+		],
 		dest: 'dist/js/',
 	},
 	images: {
@@ -99,26 +104,29 @@ function styles() {
 }
 
 function scripts() {
-	return gulp
-		.src(paths.scripts.src)
-		.pipe(sourcemaps.init())
-		.pipe(
-			ts({
-				noImplicitAny: true,
-				outFile: 'main.min.js',
-			})
-		)
-		.pipe(
-			babel({
-				presets: ['@babel/env'],
-			})
-		)
-		.pipe(uglify())
-		.pipe(concat('main.min.js'))
-		.pipe(sourcemaps.write('.'))
-		.pipe(size({ showFiles: true }))
-		.pipe(gulp.dest(paths.scripts.dest))
-		.pipe(browsersync.stream());
+	return (
+		gulp
+			.src(paths.scripts.src)
+			.pipe(sourcemaps.init())
+			.pipe(coffee({ bare: true }))
+			// .pipe(
+			// 	ts({
+			// 		noImplicitAny: true,
+			// 		outFile: 'main.min.js',
+			// 	})
+			// )
+			.pipe(
+				babel({
+					presets: ['@babel/env'],
+				})
+			)
+			.pipe(uglify())
+			.pipe(concat('main.min.js'))
+			.pipe(sourcemaps.write('.'))
+			.pipe(size({ showFiles: true }))
+			.pipe(gulp.dest(paths.scripts.dest))
+			.pipe(browsersync.stream())
+	);
 }
 
 function watch() {
